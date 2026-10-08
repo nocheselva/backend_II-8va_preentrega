@@ -37,3 +37,21 @@ Consulta el archivo `.env.example` para configurar las variables necesarias:
 - `PORT`: Puerto de ejecución del servidor Express.
 - `MONGO_URI`: Cadena de conexión a MongoDB Atlas / Local.
 - `JWT_SECRET`: Clave secreta para firmar y verificar tokens JWT.
+
+
+---
+
+## Matriz de Permisos y Autorización
+
+| Acción | `user` | `organizer` | `admin` |
+| :--- | :---: | :---: | :---: |
+| Consultar eventos publicads | ✅ | ✅ | ✅ |
+| Crear eventos | ❌ | ✅ | ✅ |
+| Modificar/cancelar eventos propios | ❌ | ✅ | ✅ |
+| Modificar cualquier evento | ❌ | ❌ | ✅ |
+| Ver todos los usuarios (Ruta Admin) | ❌ | ❌ | ✅ |
+
+### 🛑 Manejo Estándar de Errores de Acceso
+
+* **`401 Unauthorized`**: Ocurre cuando la petición **no posee una sesion válida** (ausencia de cookie JWT o token expirado/inválido).
+* **`403 Forbidden`**: Ocurre cuando el usuario **posee una sesion válida pero carece del rol necesario** o no es propietario del recurso solicitado.
