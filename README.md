@@ -1,57 +1,57 @@
-#  Plataforma de Eventos e Inscripciones - Pre-entrega 4
+# Pre-entrega 5: Roles y Autorización (Backend II)
 
-Refactorización del sistema de autenticación centralizado incorporando **Passport.js** mediante estrategias modulares, manteniendo el contrato externo de la API y garantizando compatibilidad con JWT y cookies HTTP-Only.
-
----
-
-##  Estrategias de Passport Implementadas
-
-La lógica de autenticación se encuentra centralizada en `src/config/passport.config.js`:
-
-1. **`register` (LocalStrategy):** Valida los campos requeridos (`first_name`, `last_name`, `email`, `password`), verifica la unicidad del correo electrónico en MongoDB y hashea la contraseña antes de persistir al usuario.
-2. **`login` (LocalStrategy):** Valida las credenciales contra la base de datos de manera genérica. Tras la autenticación exitosa, el controlador genera el token JWT y setea la cookie `currentUser` (`HttpOnly`).
-3. **`current` (JwtStrategy):** Extrae el token JWT desde la cookie `currentUser` mediante `cookieExtractor` y expone la información del usuario autenticado en `req.user`.
+Este proyecto implementa control de acceso basado en roles (RBAC) y autorización sobre recursos para la gestión de usuarios y eventos.
 
 ---
 
-##  Escalabilidad y Futuras Estrategias (OAuth)
+## 1. Matriz de Permisos por Rol
 
-El archivo `src/config/passport.config.js` está estructurado de forma completamente modular. Esto permite agregar nuevos proveedores de autenticación externa (como **Google**, **GitHub** o **Facebook**) añadiendo sus respectivas estrategias dentro de dicho archivo sin necesidad de modificar `src/app.js` ni alterar las rutas existentes.
-
----
-
-##  Endpoints de Sesión (`/api/sessions`)
-
-| Método | Endpoint | Descripción | Requiere Cookie |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/sessions/register` | Registro de nuevo usuario (Passport 'register') | No |
-| `POST` | `/api/sessions/login` | Login y emisión de cookie `currentUser` (Passport 'login') | No |
-| `GET` | `/api/sessions/current` | Devuelve los datos del usuario logueado (Passport 'current') | Sí |
-| `POST` | `/api/sessions/logout` | Elimina la cookie de sesión active | No |
+| Rol | `/api/sessions` | `POST /api/events` (Crear) | `PUT /api/events/:id` (Editar) | `GET /api/users` (Listar usuarios) |
+|---|---|---|---|---|
+| **Invitado / Sin Sesión** | Registrar / Login | ❌ (401 Unauthorized) | ❌ (401 Unauthorized) | ❌ (401 Unauthorized) |
+| **`user`** | Autenticado | ❌ (403 Forbidden) | ❌ (403 Forbidden) | ❌ (403 Forbidden) |
+| **`organizer`** | Autenticado | ✅ (201 Created) | ✅ Solo si es CREADOR del evento (403 si es ajeno) | ❌ (403 Forbidden) |
+| **`admin`** | Autenticado | ✅ (201 Created) | ✅ Cualquier evento | ✅ (200 OK) |
 
 ---
 
-##  Variables de Entorno
+## 2. Diferencia entre Errores 401 y 403
 
-Consulta el archivo `.env.example` para configurar las variables necesarias:
-- `PORT`: Puerto de ejecución del servidor Express.
-- `MONGO_URI`: Cadena de conexión a MongoDB Atlas / Local.
-- `JWT_SECRET`: Clave secreta para firmar y verificar tokens JWT.
-
+* **`401 Unauthorized` (Autenticación requerida):** 
+  Indica que la solicitud carece de credenciales válidas o que la sesión (JWT/Cookie) no existe o ha expirado. El servidor desconoce la identidad del cliente.
+* **`403 Forbidden` (Autorización denegada):** 
+  Indica que el servidor reconoce la identidad del cliente autenticado, pero este **no posee el rol ni los permisos necesarios** para acceder al recurso solicitado o realizar la acción especificada.
 
 ---
 
-## Matriz de Permisos y Autorización
+## 3. Evidencias de Pruebas Funcionales (Postman)
 
-| Acción | `user` | `organizer` | `admin` |
-| :--- | :---: | :---: | :---: |
-| Consultar eventos publicads | ✅ | ✅ | ✅ |
-| Crear eventos | ❌ | ✅ | ✅ |
-| Modificar/cancelar eventos propios | ❌ | ✅ | ✅ |
-| Modificar cualquier evento | ❌ | ❌ | ✅ |
-| Ver todos los usuarios (Ruta Admin) | ❌ | ❌ | ✅ |
+### Prueba 1: Acceso sin autenticación (401)
+* **Ruta:** `POST /api/events`
+* **Resultado:** `401 Unauthorized`
+* **Captura:** ![Prueba 1](docs/prueba1.png)
 
-### 🛑 Manejo Estándar de Errores de Acceso
+### Prueba 2: Intento de creación de evento con rol USER (403)
+* **Ruta:** `POST /api/events`
+* **Resultado:** `403 Forbidden` ("No tenés permisos para realizar esta acción")
+* **Captura:** ![Prueba 2](docs/1.png)
 
-* **`401 Unauthorized`**: Ocurre cuando la petición **no posee una sesion válida** (ausencia de cookie JWT o token expirado/inválido).
-* **`403 Forbidden`**: Ocurre cuando el usuario **posee una sesion válida pero carece del rol necesario** o no es propietario del recurso solicitado.
+### Prueba 3: Creación exitosa de evento con rol ORGANIZER (201)
+* **Ruta:** `POST /api/events`
+* **Resultado:** `201 Created`
+* **Captura:** ![Prueba 3](docs/3.jpg)
+
+### Prueba 4: Acceso a ruta administrativa /api/users con rol ORGANIZER (403)
+* **Ruta:** `GET /api/users`
+* **Resultado:** `403 Forbidden` ("No tenés permisos para realizar esta acción")
+* **Captura:** ![Prueba 4](docs/4.png)
+
+### Prueba 5: Acceso a ruta administrativa /api/users con rol ADMIN (200)
+* **Ruta:** `GET /api/users`
+* **Resultado:** `200 OK`
+* **Captura:** ![Prueba 5](docs/6.png)
+
+### Prueba 6: Intento de modificación de un evento de otro organizador (403)
+* **Ruta:** `PUT /api/events/:id`
+* **Resultado:** `403 Forbidden` ("No tenés permisos para modificar este evento")
+* **Captura:** ![Prueba 6](docs/9.png)
