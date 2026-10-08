@@ -1,43 +1,68 @@
-import { eventModel } from '../models/Event.js';
+// src/controllers/events.controller.js
+import { EventService } from '../services/EventService.js';
 
-// GET /api/events
-export const getEvents = async (req, res, next) => {
+const eventService = new EventService();
+
+export const createEvent = async (req, res) => {
   try {
-    const events = await eventModel.find();
-    res.json({ status: 'success', payload: events });
+    const event = await eventService.createEvent(req.body, req.user);
+    res.status(201).json({ status: 'success', payload: event });
   } catch (error) {
-    next(error);
+    if (error.message.startsWith('VALIDATION_ERROR')) {
+      return res.status(400).json({ status: 'error', message: error.message.replace('VALIDATION_ERROR: ', '') });
+    }
+    res.status(500).json({ status: 'error', message: error.message });
   }
 };
 
-// POST /api/events
-export const createEvent = async (req, res, next) => {
+export const getEvents = async (req, res) => {
   try {
-    const { title, description, date, capacity } = req.body;
-    
-    // Creamos el evento asignando el organizador autenticado
-    const newEvent = await eventModel.create({
-      title,
-      description,
-      date,
-      capacity,
-      organizer: req.user._id || req.user.id
-    });
-
-    res.status(201).json({ status: 'success', payload: newEvent });
+    const result = await eventService.getEvents(req.query);
+    res.json({ status: 'success', ...result });
   } catch (error) {
-    next(error);
+    res.status(500).json({ status: 'error', message: error.message });
   }
 };
 
-// PUT /api/events/:id
-export const updateEvent = async (req, res, next) => {
+export const getEventById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updatedEvent = await eventModel.findByIdAndUpdate(id, req.body, { new: true });
-    
-    res.json({ status: 'success', payload: updatedEvent });
+    const event = await eventService.getEventById(req.params.id);
+    res.json({ status: 'success', payload: event });
   } catch (error) {
-    next(error);
+    if (error.message.startsWith('NOT_FOUND')) {
+      return res.status(404).json({ status: 'error', message: error.message.replace('NOT_FOUND: ', '') });
+    }
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+export const updateEvent = async (req, res) => {
+  try {
+    const updated = await eventService.updateEvent(req.params.id, req.body, req.user);
+    res.json({ status: 'success', payload: updated });
+  } catch (error) {
+    if (error.message.startsWith('FORBIDDEN')) {
+      return res.status(403).json({ status: 'error', message: error.message.replace('FORBIDDEN: ', '') });
+    }
+    if (error.message.startsWith('BUSINESS_ERROR')) {
+      return res.status(400).json({ status: 'error', message: error.message.replace('BUSINESS_ERROR: ', '') });
+    }
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+};
+
+export const changeStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const updated = await eventService.changeStatus(req.params.id, status, req.user);
+    res.json({ status: 'success', payload: updated });
+  } catch (error) {
+    if (error.message.startsWith('FORBIDDEN')) {
+      return res.status(403).json({ status: 'error', message: error.message.replace('FORBIDDEN: ', '') });
+    }
+    if (error.message.startsWith('BUSINESS_ERROR')) {
+      return res.status(400).json({ status: 'error', message: error.message.replace('BUSINESS_ERROR: ', '') });
+    }
+    res.status(500).json({ status: 'error', message: error.message });
   }
 };
