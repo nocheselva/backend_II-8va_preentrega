@@ -16,3 +16,4 @@ mongoose.connect(process.env.MONGO_URL)
     });
   })
   .catch((err) => console.error('Error conectando a MongoDB:', err));
+
