@@ -1,4 +1,4 @@
-import TicketModel from '../models/Ticket.js';
+import TicketModel from '../models/ticket.model.js';
 
 export class TicketDAO {
   async findById(id) {

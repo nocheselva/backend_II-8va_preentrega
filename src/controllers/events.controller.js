@@ -1,5 +1,5 @@
 // src/controllers/events.controller.js
-import { EventService } from '../services/EventService.js';
+import { EventService } from '../services/event.service.js';
 
 const eventService = new EventService();
 

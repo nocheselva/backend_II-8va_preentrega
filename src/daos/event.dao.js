@@ -1,7 +1,6 @@
-// src/repositories/EventRepository.js
-import { EventModel } from '../models/Event.js';
+import { EventModel } from '../models/event.model.js';
 
-export class EventRepository {
+export class EventDAO {
   async create(data) {
     return await EventModel.create(data);
   }
@@ -17,7 +16,6 @@ export class EventRepository {
   async findWithFilters({ filters, page = 1, limit = 10, sort = 'date' }) {
     const skip = (page - 1) * limit;
     
-    // Configuración del ordenamiento
     const sortOption = {};
     if (sort) {
       const field = sort.startsWith('-') ? sort.substring(1) : sort;

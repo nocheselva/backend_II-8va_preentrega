@@ -1,7 +1,7 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { Strategy as JwtStrategy } from 'passport-jwt';
-import User from '../models/User.js';
+import User from '../models/user.model.js';
 import { createHash, isValidPassword } from '../utils/hash.js';
 import { cookieExtractor } from '../utils/jwtExtractor.js';
 

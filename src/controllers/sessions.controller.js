@@ -1,4 +1,5 @@
 import { generateToken } from '../utils/jwt.js';
+import { UserDTO } from '../dtos/user.dto.js'; // <- Importar UserDTO
 
 export class SessionsController {
   // Callback tras autenticación exitosa en 'register'
@@ -6,13 +7,7 @@ export class SessionsController {
     const user = req.user;
     return res.status(201).json({
       status: 'success',
-      payload: {
-        id: user._id,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        email: user.email,
-        role: user.role
-      }
+      payload: new UserDTO(user)
     });
   }
 
@@ -31,16 +26,17 @@ export class SessionsController {
     });
   }
 
-  // Muestra los datos expuestos en req.user por la estrategia JWT ('current')
+  // Retorna el usuario autenticado formateado con DTO
   async current(req, res) {
-    const user = req.user;
+    if (!req.user) {
+      return res.status(401).json({ status: 'error', message: 'No autenticado' });
+    }
+
+    const userDTO = new UserDTO(req.user);
+
     return res.json({
       status: 'success',
-      payload: {
-        id: user.id || user._id,
-        email: user.email,
-        role: user.role
-      }
+      payload: userDTO
     });
   }
 

@@ -1,4 +1,4 @@
-import { EventRepository } from '../repositories/EventRepository.js';
+import { EventRepository } from '../repositories/event.repository.js';
 
 const eventRepository = new EventRepository();
 

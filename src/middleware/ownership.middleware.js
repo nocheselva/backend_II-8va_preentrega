@@ -1,4 +1,4 @@
-import { EventModel } from '../models/Event.js'; // Nombre correcto de exportación
+import { EventModel } from '../models/event.model.js'; // Nombre correcto de exportación
 
 export const checkEventOwnership = async (req, res, next) => {
   try {

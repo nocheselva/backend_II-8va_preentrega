@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { TicketsController } from '../controllers/tickets.controller.js';
-import { isAuthenticated } from '../middlewares/auth.middlewares.js';
+import { isAuthenticated } from '../middleware/auth.middleware.js'; // <- Se quitó la 's' final
 
 const router = Router();
 const controller = new TicketsController();

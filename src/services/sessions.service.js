@@ -1,13 +1,23 @@
-import User from '../models/User.js'; // <--- Importación por defecto sin {}
+import { UserRepository } from '../repositories/user.repository.js';
+import { UserDTO } from '../dtos/user.dto.js';
 import { createHash, isValidPassword } from '../utils/hash.js';
 
 export class SessionsService {
+  constructor() {
+    this.userRepository = new UserRepository();
+  }
+
   async registerUser(userData) {
     const { first_name, last_name, email, password } = userData;
 
+    const existingUser = await this.userRepository.getByEmail(email);
+    if (existingUser) {
+      throw new Error('El email ya se encuentra registrado');
+    }
+
     const hashedPassword = createHash(password);
 
-    const newUser = await User.create({
+    const newUser = await this.userRepository.createUser({
       first_name,
       last_name,
       email,
@@ -15,17 +25,11 @@ export class SessionsService {
       role: 'user'
     });
 
-    return {
-      id: newUser._id,
-      first_name: newUser.first_name,
-      last_name: newUser.last_name,
-      email: newUser.email,
-      role: newUser.role
-    };
+    return new UserDTO(newUser);
   }
 
   async loginUser(email, password) {
-    const user = await User.findOne({ email });
+    const user = await this.userRepository.getByEmail(email);
 
     if (!user) return null;
 

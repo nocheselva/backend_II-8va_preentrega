@@ -8,8 +8,8 @@ import {
   changeStatus 
 } from '../controllers/events.controller.js';
 import { TicketsController } from '../controllers/tickets.controller.js';
-import { authorizeRoles } from '../middlewares/authorize.middleware.js';
-import { checkEventOwnership } from '../middlewares/ownership.middleware.js';
+import { authorizeRoles } from '../middleware/authorize.middleware.js';
+import { checkEventOwnership } from '../middleware/ownership.middleware.js';
 
 const router = Router();
 const ticketsController = new TicketsController();

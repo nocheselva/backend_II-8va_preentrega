@@ -1,4 +1,4 @@
-import { UserDTO } from './UserDTO.js';
+import { UserDTO } from './user.dto.js';
 
 export class TicketDTO {
   constructor(ticket) {
@@ -7,7 +7,6 @@ export class TicketDTO {
     this.status = ticket.status;
     this.createdAt = ticket.createdAt;
     
-    // Si el usuario viene populado, lo pasamos por UserDTO para ocultar el password
     if (ticket.user) {
       this.user = typeof ticket.user === 'object' ? new UserDTO(ticket.user) : ticket.user;
     }
